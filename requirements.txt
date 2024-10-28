@@ -1,1 +1,2 @@
 streamlit
+pymongo==4.10.1
