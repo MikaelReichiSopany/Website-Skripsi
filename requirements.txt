@@ -3,7 +3,7 @@ pymongo==4.10.1
 pandas
 datetime
 numpy
-joblib
-keras
-tensorflow
-scikit-learn
+joblib==1.4.2
+keras==3.6.0
+tensorflow==2.17.0
+scikit-learn==1.5.2
