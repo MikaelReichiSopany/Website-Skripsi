@@ -87,14 +87,17 @@ selected_station = st.selectbox(
 )
 
 if selected_station is not None:
-    chosen_station = db[str(inv_station_dict[selected_station])]
-    resulting = chosen_station.find()
-    data_list = list(resulting)
-    data_df = pd.DataFrame(data_list)
-    data_df = data_df.drop('_id',axis = 1 )
-    data_df['Tanggal'] = data_df['Tanggal'].dt.strftime("%d-%m-%Y")
-
+    with st.spinner('Loading...'):
     
-    st.dataframe(data_df, hide_index=True, on_select="ignore")
+
+        chosen_station = db[str(inv_station_dict[selected_station])]
+        resulting = chosen_station.find()
+        data_list = list(resulting)
+        data_df = pd.DataFrame(data_list)
+        data_df = data_df.drop('_id',axis = 1 )
+        data_df['Tanggal'] = data_df['Tanggal'].dt.strftime("%d-%m-%Y")
+
+        
+        st.dataframe(data_df, hide_index=True, on_select="ignore")
 
 st.dataframe(var_df, hide_index=True)

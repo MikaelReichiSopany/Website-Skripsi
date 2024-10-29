@@ -157,10 +157,5 @@ if predict_button:
   #  result = predict(selected_station, selected_date, selected_model, selected_var)
   with st.spinner('Predicting...'):
     result = predict(selected_station, selected_date, selected_model)
-    st.success('Predicting Success')
     #  st.write(result)
     st.dataframe(result)
-
-
-# if selected_station is not None:
-#   st.write("Available Variables:")
