@@ -5,3 +5,5 @@ datetime
 numpy
 joblib
 keras
+tensorflow
+scikit-learn
