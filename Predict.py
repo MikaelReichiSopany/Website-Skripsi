@@ -3,7 +3,6 @@ import joblib
 import datetime
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
 from Dataset import init_connection, inv_station_dict, station_dict, var_dict, inv_var_dict, var_data
 
 

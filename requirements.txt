@@ -1,2 +1,6 @@
 streamlit
 pymongo==4.10.1
+pandas
+datetime
+numpy
+joblib
