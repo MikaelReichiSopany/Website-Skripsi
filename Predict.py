@@ -73,9 +73,15 @@ def predict(station, date, algorithm, model_number, start_date = None):
   #   time_step = 14
 
   if algorithm == 'GRU':
-    time_step = 14
+    if model_number in [1, 2, 5, 6]:
+      time_step = 7
+    else:
+      time_step = 14
   else:
-    time_step = 8
+    if model_number <= 5:
+      time_step = 7
+    else:
+      time_step = 14
 
   chosen_station = db[str(inv_station_dict[station])]
 
@@ -93,8 +99,8 @@ def predict(station, date, algorithm, model_number, start_date = None):
   if algorithm == 'GRU':
     # load model and scaler
     # uwu
-    # model = joblib.load(f'GRU_Model/gru_{model_number}.joblib')
-    model = joblib.load(f'GRU_Model/gru_model.joblib')
+    model = joblib.load(f'GRU_Model/gru_{model_number}.joblib')
+    # model = joblib.load(f'GRU_Model/gru_model.joblib')
     scaler = joblib.load(f'GRU_Model/scaler.joblib')
 
     # # scale data
@@ -134,8 +140,8 @@ def predict(station, date, algorithm, model_number, start_date = None):
 
       for var, desc in  var_dict.items():
         # uwu
-        # model = joblib.load(f'RF_Model/{model_number}_{var}.joblib')
-        model = joblib.load(f'RF_Model/{var}.joblib')
+        model = joblib.load(f'RF_Model/{model_number}_{var}.joblib')
+        # model = joblib.load(f'RF_Model/{var}.joblib')
         prep_data = my_reshape(data_df[-time_step:].values, time_step)
 
         pred = model.predict(prep_data.reshape(prep_data.shape[0], -1))
