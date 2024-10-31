@@ -7,3 +7,5 @@ joblib==1.4.2
 keras==3.6.0
 tensorflow==2.17.0
 scikit-learn==1.5.2
+matplotlib
+bcrypt

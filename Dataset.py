@@ -2,6 +2,8 @@ import streamlit as st
 import pymongo
 import pandas as pd
 import datetime
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 # streamlit run main.py --server.port 8503
 
 #App Title
@@ -73,6 +75,17 @@ var_data = {
     "Unit": ["°C", "°C", "°C", "%", "mm", "jam", "m/s", "m/s"]
 }
 
+target_cols = [
+    ('Tn', '°C'),
+    ('Tx', '°C'),
+    ('Tavg', '°C'),
+    ('RH_avg', '%'),
+    ('RR', 'mm'),
+    ('ss', 'jam'),
+    ('ff_x', 'm/s'),
+    ('ff_avg', 'm/s')
+]
+
 # Convert to DataFrame
 var_df = pd.DataFrame(var_data)
 
@@ -99,5 +112,19 @@ if selected_station is not None:
 
         
         st.dataframe(data_df, hide_index=True, on_select="ignore")
+        st.dataframe(var_df, hide_index=True)
 
-st.dataframe(var_df, hide_index=True)
+        for col, unit in target_cols:
+            plt.figure(figsize=(15, 5))
+            plt.plot(data_df.index.to_numpy(), data_df[col].to_numpy(), label=col)
+            plt.title(var_dict[col] + f' ({col})')
+            plt.xlabel('Date')
+            plt.ylabel('Values in ' + unit)
+            plt.legend(loc='upper right')
+            plt.xticks(rotation=45)
+            plt.grid(True)
+            plt.gca().xaxis.set_major_locator(mdates.YearLocator(1))  # Show tick every year
+            plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y'))  # Format the date as 'YYYY'
+            st.pyplot(plt)
+            # plt.show()
+

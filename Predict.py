@@ -3,7 +3,57 @@ import joblib
 import datetime
 import numpy as np
 import pandas as pd
-from Dataset import init_connection, inv_station_dict, station_dict, var_dict, inv_var_dict, var_data
+import pymongo
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+
+inv_station_dict = {
+    "Stasiun Klimatologi Sumatera Selatan": "SK_SUMSEL",
+    "Stasiun Klimatologi Sumatera Utara": "SK_SUMUT",
+    "Stasiun Meteorologi Binaka": "SM_BINAKA",
+    "Stasiun Meteorologi Kualanamu": "SM_KUALANAMU",
+    "Stasiun Meteorologi Minangkabau": "SM_MINANGKABAU",
+    "Stasiun Meteorologi Sultan Mahmud Badaruddin II": "SM_SULTAN",
+    "Stasiun Meteorologi FL Tobing": "SM_TOBING"
+}
+
+station_dict = {
+    "SK_SUMSEL": "Stasiun Klimatologi Sumatera Selatan",
+    "SK_SUMUT": "Stasiun Klimatologi Sumatera Utara",
+    "SM_BINAKA": "Stasiun Meteorologi Binaka",
+    "SM_KUALANAMU": "Stasiun Meteorologi Kualanamu",
+    "SM_MINANGKABAU": "Stasiun Meteorologi Minangkabau",
+    "SM_SULTAN": "Stasiun Meteorologi Sultan Mahmud Badaruddin II",
+    "SM_TOBING": "Stasiun Meteorologi FL Tobing"
+}
+
+var_dict = {
+    "Tn": "Temperatur minimum",
+    "Tx": "Temperatur maksimum",
+    "Tavg": "Temperatur rata-rata",
+    "RH_avg": "Kelembapan rata-rata",
+    "RR": "Curah hujan",
+    "ss": "Lamanya penyinaran matahari",
+    "ff_x": "Kecepatan angin maksimum",
+    "ff_avg": "Kecepatan angin rata-rata",
+}
+
+target_cols = [
+    ('Tn', '°C'),
+    ('Tx', '°C'),
+    ('Tavg', '°C'),
+    ('RH_avg', '%'),
+    ('RR', 'mm'),
+    ('ss', 'jam'),
+    ('ff_x', 'm/s'),
+    ('ff_avg', 'm/s')
+]
+
+@st.cache_resource
+def init_connection():
+    connection_string = st.secrets["mongo"]["connection_string"]
+    return pymongo.MongoClient(connection_string)
 
 
 start_date_limit = datetime.date(2024, 6, 30)
@@ -14,17 +64,23 @@ def my_reshape (dataset, time_step):
   dataX.append(a)
   return np.array(dataX)
 
-def predict(station, date, model):
+def predict(station, date, algorithm, model_number, start_date = None):
 
+  # uwu
+  # if model_number < 5:
+  #   time_step = 7
+  # else:
+  #   time_step = 14
 
-  time_step_gru = 14
-  time_step_rf = 8
+  if algorithm == 'GRU':
+    time_step = 14
+  else:
+    time_step = 8
 
   chosen_station = db[str(inv_station_dict[station])]
-  if model == 'GRU':
-    initial_data = chosen_station.find().sort({ 'Tanggal': -1 }).limit(time_step_gru)
-  else:
-    initial_data = chosen_station.find().sort({ 'Tanggal': -1 }).limit(time_step_rf)
+
+  initial_data = chosen_station.find().sort({ 'Tanggal': -1 }).limit(time_step)
+
   loop_days = (date - start_date_limit).days
 
 # change mongodb object to df
@@ -34,32 +90,16 @@ def predict(station, date, model):
   data_df = data_df.iloc[::-1]
   data_df = data_df.set_index('Tanggal')
 
-  if model == 'GRU':
+  if algorithm == 'GRU':
     # load model and scaler
-    model = joblib.load('GRU_Model/gru_model.joblib')
-    scaler = joblib.load('GRU_Model/scaler.joblib')
-
-    # # change mongodb object to df
-    # data_list = list(initial_data)
-    # data_df = pd.DataFrame(data_list)
-    # data_df = data_df.drop('_id',axis = 1 )
-    # data_df = data_df.iloc[::-1]
-    # data_df = data_df.set_index('Tanggal')
+    # uwu
+    # model = joblib.load(f'GRU_Model/gru_{model_number}.joblib')
+    model = joblib.load(f'GRU_Model/gru_model.joblib')
+    scaler = joblib.load(f'GRU_Model/scaler.joblib')
 
     # # scale data
     scaled_data = scaler.transform(data_df)
-    scaled_data = my_reshape(scaled_data, time_step_gru)
-
-    # # predict using GRU model
-    # pred = model.predict(scaled_data)
-
-    # # return predictions to normal value
-    # inv_pred = scaler.inverse_transform(pred)
-
-    # pred_df = pd.DataFrame(inv_pred)
-
-    # pred_df.columns = data_df.columns
-    # pred_df.insert(0, 'Tanggal', date)
+    scaled_data = my_reshape(scaled_data, time_step)
 
     # # Iterative forecasting
     date_for_index = start_date_limit
@@ -68,7 +108,7 @@ def predict(station, date, model):
         date_for_index += datetime.timedelta(days=1)
 
         # Make prediction
-        pred = model.predict(scaled_data[-time_step_gru:].reshape(1, time_step_gru, -1))  # Adjust shape as needed
+        pred = model.predict(scaled_data[-time_step:].reshape(1, time_step, -1))  # Adjust shape as needed
         pred = scaler.inverse_transform(pred)
 
         pred_df = pd.DataFrame(pred)
@@ -78,7 +118,11 @@ def predict(station, date, model):
         data_df = pd.concat([data_df, pred_df])
         scaled_data = scaler.transform(data_df)
 
-    return data_df[-loop_days:]
+    # if start_date:
+    #   range_day = (date - start_date).days
+    #   return data_df[-(range_day + 1):]
+    # else:
+    #   return data_df[-1:]
 
   else:
     # load model
@@ -89,8 +133,10 @@ def predict(station, date, model):
       all_var_pred = []
 
       for var, desc in  var_dict.items():
+        # uwu
+        # model = joblib.load(f'RF_Model/{model_number}_{var}.joblib')
         model = joblib.load(f'RF_Model/{var}.joblib')
-        prep_data = my_reshape(data_df[-time_step_rf:].values, time_step_rf)
+        prep_data = my_reshape(data_df[-time_step:].values, time_step)
 
         pred = model.predict(prep_data.reshape(prep_data.shape[0], -1))
         all_var_pred.append(pred[0])
@@ -104,7 +150,12 @@ def predict(station, date, model):
 
       data_df = pd.concat([data_df, pred_df])
 
-    return data_df[-loop_days:]
+    # return data_df[-loop_days:]
+  if start_date:
+      range_day = (date - start_date).days
+      return data_df[-(range_day + 1):]
+  else:
+      return data_df[-1:]
 
 client = init_connection()
 db = client["Skripsi"]
@@ -121,41 +172,84 @@ selected_station = st.selectbox(
     key='station'
 )
 
-selected_date = st.date_input(
-    "Select a Date",
-    value=None,
-    format = "DD/MM/YYYY",
-    min_value=start_date_limit + datetime.timedelta(days=1),
-    key = 'date'
+date_toggle = st.toggle("Date as a range")
+
+if not date_toggle:
+  selected_date = st.date_input(
+      "Select a Date",
+      value=None,
+      format = "DD/MM/YYYY",
+      min_value=start_date_limit + datetime.timedelta(days=1),
+      key = 'single_date'
+  )
+else:
+  selected_start_date = st.date_input(
+      "Select Starting Date",
+      value=None,
+      format = "DD/MM/YYYY",
+      min_value=start_date_limit + datetime.timedelta(days=1),
+      key = 'start_date'
+  )
+
+  selected_end_date = st.date_input(
+      "Select End Date",
+      value=None,
+      format = "DD/MM/YYYY",
+      min_value=start_date_limit + datetime.timedelta(days=1),
+      key = 'end_date'
+  )
+
+  if selected_end_date and selected_start_date:
+    if selected_end_date <= selected_start_date:
+      st.error("Selected End Date must be more than Selected Start Date")
+
+selected_algorithm = st.selectbox(
+    "Select a algorithm",
+    ["GRU", "Random Forest"],
+    index=None,
+    placeholder="Select a algorithm",
+    key='algorithm'
 )
 
 selected_model = st.selectbox(
-    "Select a Model",
-    ["GRU", "Random Forest"],
-    index=None,
-    placeholder="Select a Model",
-    key='model'
+  "Select a Model",
+  ['1', '2', '3', '4', '5', '6', '7', '8'],
+  index=None,
+  placeholder="Select a algorithm",
+  key='model'
 )
 
-# if selected_model is not None:
 
-#   st.write("Select Variable to Predict")
 
-#   var_list = list(var_dict.values())
-#   selected_var = []
+if not date_toggle:
+  bool_button = bool(selected_station and selected_date and selected_algorithm and selected_model)
 
-#   for var in var_list:
-#       selected = st.checkbox(var)
-#       if selected:
-#           selected_var.append(var)
+  predict_button = st.button("Predict", disabled= not bool_button)
 
-bool_button = bool(selected_station and selected_date and selected_model)
+  if predict_button:
+    with st.spinner('Predicting...'):
+      result = predict(selected_station, selected_date, selected_algorithm, selected_model)
 
-predict_button = st.button("Predict", disabled= not bool_button)
+      st.dataframe(result)
 
-if predict_button:
-  #  result = predict(selected_station, selected_date, selected_model, selected_var)
-  with st.spinner('Predicting...'):
-    result = predict(selected_station, selected_date, selected_model)
-    #  st.write(result)
-    st.dataframe(result)
+else:
+  bool_button = bool(selected_station and selected_start_date and selected_end_date and selected_algorithm and selected_model)
+
+  predict_button = st.button("Predict", disabled= not bool_button)
+
+  if predict_button:
+    with st.spinner('Predicting...'):
+      result = predict(selected_station, selected_end_date, selected_algorithm, selected_model, start_date=selected_start_date)
+
+      st.dataframe(result)
+      if len(result) > 1:
+        for col, unit in target_cols:
+          plt.figure(figsize=(15, 5))
+          plt.plot(result.index.to_numpy(), result[col].to_numpy(), label=col)
+          plt.title(var_dict[col] + f' ({col})')
+          plt.xlabel('Date')
+          plt.ylabel('Values in ' + unit)
+          plt.legend(loc='upper right')
+          plt.xticks(rotation=45)
+          plt.grid(True)
+          st.pyplot(plt)
