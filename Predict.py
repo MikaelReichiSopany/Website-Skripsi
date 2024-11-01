@@ -78,7 +78,7 @@ def predict(station, date, algorithm, model_number, start_date = None):
     else:
       time_step = 14
   else:
-    if int(model_number) <= 5:
+    if model_number in [1, 2, 5, 6]:
       time_step = 7
     else:
       time_step = 14
@@ -219,7 +219,7 @@ selected_algorithm = st.selectbox(
 
 selected_model = st.selectbox(
   "Select a Model",
-  ['1', '2', '3', '4', '5', '6', '7', '8'],
+  [1, 2, 3, 4, 5, 6, 7, 8],
   index=None,
   placeholder="Select a algorithm",
   key='model'
