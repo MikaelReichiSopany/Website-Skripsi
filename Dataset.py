@@ -116,7 +116,7 @@ if selected_station is not None:
 
         for col, unit in target_cols:
             plt.figure(figsize=(15, 5))
-            plt.plot(data_df.index.to_numpy(), data_df[col].to_numpy(), label=col)
+            plt.plot(data_df['Tanggal'].to_numpy(), data_df[col].to_numpy(), label=col)
             plt.title(var_dict[col] + f' ({col})')
             plt.xlabel('Date')
             plt.ylabel('Values in ' + unit)
