@@ -78,7 +78,7 @@ def predict(station, date, algorithm, model_number, start_date = None):
     else:
       time_step = 14
   else:
-    if model_number <= 5:
+    if int(model_number) <= 5:
       time_step = 7
     else:
       time_step = 14
