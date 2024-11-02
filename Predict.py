@@ -82,8 +82,6 @@ def predict(station, date, algorithm, model_number, start_date = None):
       time_step = 7
     else:
       time_step = 14
-  print(model_number)
-  print(time_step)
 
   chosen_station = db[str(inv_station_dict[station])]
 
