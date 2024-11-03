@@ -18,6 +18,7 @@ def logout():
   st.rerun()
 
 # Define pages
+home_page = st.Page("Homepage.py", title="Home", default=True)
 predict_page = st.Page("Predict.py", title="Predict")
 dataset_page = st.Page("Dataset.py", title="Dataset")
 about_page = st.Page("About.py", title="About")
@@ -27,7 +28,7 @@ register_page = st.Page("Register.py", title="Register")
 
 # Configure navigation with initial page selection
 if st.session_state.logged_in:
-  pg = st.navigation([predict_page, dataset_page, model_page, about_page])
+  pg = st.navigation([home_page, predict_page, dataset_page, model_page, about_page])
   with st.sidebar:
      logout_button = st.button("Log Out")
      if logout_button:

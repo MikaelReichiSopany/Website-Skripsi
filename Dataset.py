@@ -108,15 +108,16 @@ if selected_station is not None:
         data_list = list(resulting)
         data_df = pd.DataFrame(data_list)
         data_df = data_df.drop('_id',axis = 1 )
-        data_df['Tanggal'] = data_df['Tanggal'].dt.strftime("%d-%m-%Y")
+        # data_df['Tanggal'] = data_df['Tanggal'].dt.strftime("%d-%m-%Y")
+        data_df = data_df.set_index('Tanggal')
 
         
-        st.dataframe(data_df, hide_index=True, on_select="ignore")
+        st.dataframe(data_df, on_select="ignore")
         st.dataframe(var_df, hide_index=True)
 
         for col, unit in target_cols:
             plt.figure(figsize=(15, 5))
-            plt.plot(data_df['Tanggal'].to_numpy(), data_df[col].to_numpy(), label=col)
+            plt.plot(data_df.index.to_numpy(), data_df[col].to_numpy(), label=col)
             plt.title(var_dict[col] + f' ({col})')
             plt.xlabel('Date')
             plt.ylabel('Values in ' + unit)
