@@ -217,9 +217,15 @@ selected_algorithm = st.selectbox(
     key='algorithm'
 )
 
+if selected_algorithm == 'GRU' :
+  model_list = [1, 2, 3, 4, 5, 6, 7, 8]
+else:
+  model_list = [1, 3, 5, 6, 7, 8]
+
+
 selected_model = st.selectbox(
   "Select a Model",
-  [1, 2, 3, 4, 5, 6, 7, 8],
+  model_list,
   index=None,
   placeholder="Select a algorithm",
   key='model'
