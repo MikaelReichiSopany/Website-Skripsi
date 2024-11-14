@@ -19,24 +19,34 @@ db = client["Skripsi"]
 # sk_sumsel = db["SK_SUMSEL"]
 
 station_dict = {
-    "SK_SUMSEL": "Stasiun Klimatologi Sumatera Selatan",
-    "SK_SUMUT": "Stasiun Klimatologi Sumatera Utara",
-    "SM_BINAKA": "Stasiun Meteorologi Binaka",
-    "SM_KUALANAMU": "Stasiun Meteorologi Kualanamu",
-    "SM_MINANGKABAU": "Stasiun Meteorologi Minangkabau",
-    "SM_SULTAN": "Stasiun Meteorologi Sultan Mahmud Badaruddin II",
-    "SM_TOBING": "Stasiun Meteorologi FL Tobing"
+    "SK_SUMSEL": "Stasiun Klimatologi Sumatera Selatan (Palembang)",
+    "SK_SUMUT": "Stasiun Klimatologi Sumatera Utara (Deli Serdang)",
+    "SM_BINAKA": "Stasiun Meteorologi Binaka (Nias)",
+    "SM_KUALANAMU": "Stasiun Meteorologi Kualanamu (Deli Serdang)",
+    "SM_MINANGKABAU": "Stasiun Meteorologi Minangkabau (Padang Pariaman)",
+    "SM_SULTAN": "Stasiun Meteorologi Sultan Mahmud Badaruddin II (Palembang)",
+    "SM_TOBING": "Stasiun Meteorologi FL Tobing (Tapanuli Tengah)"
 }
 
 inv_station_dict = {
-    "Stasiun Klimatologi Sumatera Selatan": "SK_SUMSEL",
-    "Stasiun Klimatologi Sumatera Utara": "SK_SUMUT",
-    "Stasiun Meteorologi Binaka": "SM_BINAKA",
-    "Stasiun Meteorologi Kualanamu": "SM_KUALANAMU",
-    "Stasiun Meteorologi Minangkabau": "SM_MINANGKABAU",
-    "Stasiun Meteorologi Sultan Mahmud Badaruddin II": "SM_SULTAN",
-    "Stasiun Meteorologi FL Tobing": "SM_TOBING"
+    "Stasiun Klimatologi Sumatera Selatan (Palembang)": "SK_SUMSEL",
+    "Stasiun Klimatologi Sumatera Utara (Deli Serdang)": "SK_SUMUT",
+    "Stasiun Meteorologi Binaka (Nias)": "SM_BINAKA",
+    "Stasiun Meteorologi Kualanamu (Deli Serdang)": "SM_KUALANAMU",
+    "Stasiun Meteorologi Minangkabau (Padang Pariaman)": "SM_MINANGKABAU",
+    "Stasiun Meteorologi Sultan Mahmud Badaruddin II (Palembang)": "SM_SULTAN",
+    "Stasiun Meteorologi FL Tobing (Tapanuli Tengah)": "SM_TOBING"
 }
+
+# inv_station_dict = {
+#     "Stasiun Klimatologi Sumatera Selatan": "SK_SUMSEL",
+#     "Stasiun Klimatologi Sumatera Utara": "SK_SUMUT",
+#     "Stasiun Meteorologi Binaka": "SM_BINAKA",
+#     "Stasiun Meteorologi Kualanamu": "SM_KUALANAMU",
+#     "Stasiun Meteorologi Minangkabau": "SM_MINANGKABAU",
+#     "Stasiun Meteorologi Sultan Mahmud Badaruddin II": "SM_SULTAN",
+#     "Stasiun Meteorologi FL Tobing": "SM_TOBING"
+# }
 
 var_dict = {
     "Tn": "Temperatur minimum",
@@ -86,6 +96,17 @@ target_cols = [
     ('ff_avg', 'm/s')
 ]
 
+format_dict = {
+    "Temperatur minimum": "{:.2f} °C",
+    "Temperatur maksimum": "{:.2f} °C",
+    "Temperatur rata-rata": "{:.2f} °C",
+    "Kelembapan rata-rata": "{:.2%}",
+    "Curah hujan": "{:.2f} mm",
+    "Lamanya penyinaran matahari": "{:.2f} jam",
+    "Kecepatan angin maksimum": "{:.2f} m/s",
+    "Kecepatan angin rata-rata": "{:.2f} m/s"
+}
+
 # Convert to DataFrame
 var_df = pd.DataFrame(var_data)
 
@@ -108,20 +129,26 @@ if selected_station is not None:
         data_list = list(resulting)
         data_df = pd.DataFrame(data_list)
         data_df = data_df.drop('_id',axis = 1 )
-        # data_df['Tanggal'] = data_df['Tanggal'].dt.strftime("%d-%m-%Y")
+
+        img_df = data_df.set_index('Tanggal').copy()
+        data_df['Tanggal'] = data_df['Tanggal'].dt.strftime("%d-%m-%Y")
         data_df = data_df.set_index('Tanggal')
 
         
-        st.dataframe(data_df, on_select="ignore")
-        st.dataframe(var_df, hide_index=True)
+        rename_dict = dict(zip(data_df.columns, var_data["Description"]))
+        result_df = data_df.rename(columns=rename_dict)
+        result_df["Kelembapan rata-rata"] = result_df["Kelembapan rata-rata"] / 100
+
+        st.dataframe(result_df.style.format(format_dict))
+
 
         for col, unit in target_cols:
             plt.figure(figsize=(15, 5))
-            plt.plot(data_df.index.to_numpy(), data_df[col].to_numpy(), label=col)
-            plt.title(var_dict[col] + f' ({col})')
+            plt.plot(img_df.index.to_numpy(), img_df[col].to_numpy(), label=col)
+            plt.title(var_dict[col])
             plt.xlabel('Date')
             plt.ylabel('Values in ' + unit)
-            plt.legend(loc='upper right')
+            # plt.legend(loc='upper right')
             plt.xticks(rotation=45)
             plt.grid(True)
             plt.gca().xaxis.set_major_locator(mdates.YearLocator(1))  # Show tick every year

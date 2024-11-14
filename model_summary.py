@@ -6,8 +6,15 @@ import pandas as pd
 df_gru = pd.read_excel('model_summary/gru.xlsx')
 df_rf = pd.read_excel('model_summary/rf.xlsx')
 
+format_dict = {
+    "R²": "{:.2%}",
+    "Learning Rate": "{:.3f}",
+    "max_depth": "{:.0f}"
+}
+
 st.subheader('Model summary for GRU')
-st.dataframe(df_gru, hide_index=True)
+st.dataframe(df_gru.style.format(format_dict), hide_index=True)
+# st.dataframe(result_df.style.format(format_dict))
 
 st.write("TimeStep = Jumlah hari sebagai input data.")
 st.write("Optimizer = Algoritma yang digunakan untuk mengoptimalkan bobot dalam model.")
@@ -21,7 +28,7 @@ st.write("Epochs = Jumlah iterasi pelatihan yang dilakukan.")
 
 
 st.subheader('Model summary for Random Forest')
-st.dataframe(df_rf, hide_index=True)
+st.dataframe(df_rf.style.format(format_dict), hide_index=True)
 
 st.write("TimeStep = Jumlah hari sebagai input data.")
 st.write("N_estimatos = Jumlah decision tree.")

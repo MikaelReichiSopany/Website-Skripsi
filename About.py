@@ -36,3 +36,16 @@ with col2:
 #     st.write(
 #         "Let's start building! For help and uwu, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
 #     )
+
+st.markdown('<p class="big-font">'
+            'Dosen Pembimbing:'
+            '</p>', 
+            unsafe_allow_html=True)
+st.markdown('<p class="big-font">'
+            'Teny Handhayani S.Kom., M.Kom., Ph.D.'
+            '</p>', 
+            unsafe_allow_html=True)
+st.markdown('<p class="big-font">'
+            'Irvan Lewenusa S.KOM., M.KOM.'
+            '</p>', 
+            unsafe_allow_html=True)
