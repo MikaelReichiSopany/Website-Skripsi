@@ -160,14 +160,12 @@ def predict(station, date, algorithm, start_date = None):
 
       for i in range(0, len(best_model_number)):
         list_to_append[0].append(result_dict[f'{best_model_number[i]}'][i])
-      print(list_to_append)
 
       pred_df = pd.DataFrame(list_to_append)
       pred_df.index = [date_for_index]
       pred_df.columns = data_df.columns
 
       data_df = pd.concat([data_df, pred_df])
-      print(data_df)
 
     if start_date:
       range_day = (date - start_date).days
